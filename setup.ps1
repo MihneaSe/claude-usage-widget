@@ -11,6 +11,8 @@
 # Keep this file ASCII-only (Windows PowerShell 5.1 reads BOM-less files as ANSI).
 # ---------------------------------------------------------------------------
 
+$Version = '1.1.0'   # keep in sync with VERSION, widget.ps1 and CHANGELOG.md
+
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
 
 $Src        = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -37,7 +39,10 @@ $xaml = @'
     </Style>
   </Window.Resources>
   <StackPanel Margin="24,20,24,20">
-    <TextBlock Text="Claude Usage Widget" FontSize="20" FontWeight="SemiBold" Foreground="#141413"/>
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Claude Usage Widget" FontSize="20" FontWeight="SemiBold" Foreground="#141413"/>
+      <TextBlock x:Name="VersionText" FontSize="12" Foreground="#73726C" VerticalAlignment="Bottom" Margin="8,0,0,4"/>
+    </StackPanel>
     <TextBlock Text="A small read-only widget showing your Claude Code session and weekly usage."
                Foreground="#73726C" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,16"/>
 
@@ -67,7 +72,7 @@ $xaml = @'
 '@
 $win = [System.Windows.Markup.XamlReader]::Parse($xaml)
 $ui = @{}
-foreach ($n in 'Checks','FixPathBtn','InstallClaudeBtn','RecheckBtn','InstallStatus',
+foreach ($n in 'VersionText','Checks','FixPathBtn','InstallClaudeBtn','RecheckBtn','InstallStatus',
                'StartupChk','LaunchChk','UninstallBtn','CloseBtn','InstallBtn','Result') { $ui[$n] = $win.FindName($n) }
 
 $BrushConv = New-Object System.Windows.Media.BrushConverter
@@ -216,12 +221,23 @@ function New-Shortcut([string]$lnk, [string]$vbs) {
 function Update-InstallState {
     $installed = Test-Path (Join-Path $Target 'widget.ps1')
     if ($installed) {
-        Set-Text $ui.InstallStatus "Installed in $Target. Install again to update."
-        $ui.InstallBtn.Content = 'Update'
+        $have = $null
+        try {
+            $m = Select-String -Path (Join-Path $Target 'widget.ps1') -Pattern "^\`$Version\s*=\s*'([^']+)'" -ErrorAction Stop | Select-Object -First 1
+            if ($m) { $have = $m.Matches[0].Groups[1].Value }
+        } catch {}
+        if (-not $have) { $have = 'an older version' } else { $have = "v$have" }
+        if ($have -eq "v$Version") {
+            Set-Text $ui.InstallStatus "v$Version is installed in $Target. Click Reinstall to repair it."
+            $ui.InstallBtn.Content = 'Reinstall'
+        } else {
+            Set-Text $ui.InstallStatus "$have is installed in $Target. Click Update to get v$Version."
+            $ui.InstallBtn.Content = "Update to v$Version"
+        }
         $ui.UninstallBtn.Visibility = 'Visible'
         $ui.StartupChk.IsChecked = (Test-Path $StartupLnk)
     } else {
-        Set-Text $ui.InstallStatus "Will be installed in $Target (no admin rights needed)."
+        Set-Text $ui.InstallStatus "v$Version will be installed in $Target (no admin rights needed)."
         $ui.InstallBtn.Content = 'Install'
         $ui.UninstallBtn.Visibility = 'Collapsed'
     }
@@ -351,7 +367,7 @@ $ui.InstallBtn.add_Click({
         if ($ui.StartupChk.IsChecked) { New-Shortcut $StartupLnk $vbs }
         elseif (Test-Path $StartupLnk) { Remove-Item $StartupLnk -Force }
         if ($ui.LaunchChk.IsChecked) { $l = Get-Launch $vbs; Start-Process $l.exe -ArgumentList $l.args -WindowStyle Hidden }
-        Show-Result 'Done. Find it later in the Start menu as "Claude Usage Widget".'
+        Show-Result "Done: v$Version installed. Find it later in the Start menu as `"Claude Usage Widget`"."
         Update-InstallState
     } catch {
         Show-Result ("Install failed: " + $_.Exception.Message) '#B53A31'
@@ -376,6 +392,8 @@ $ui.UninstallBtn.add_Click({
 $ui.CloseBtn.add_Click({ $win.Close() })
 
 # ---- go -------------------------------------------------------------------
+$ui.VersionText.Text = "v$Version"
+$win.Title = "Claude Usage Widget v$Version - Setup"
 Update-InstallState
 $win.add_ContentRendered({ Check-All })
 [void]$win.ShowDialog()

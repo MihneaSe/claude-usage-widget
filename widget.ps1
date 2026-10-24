@@ -1,4 +1,4 @@
-# Claude Usage Mini - read-only Claude Code usage widget for Windows (v4)
+# Claude Usage Mini - read-only Claude Code usage widget for Windows
 # ---------------------------------------------------------------------------
 # What it does, and nothing more:
 #   * Every 2 minutes runs:  claude -p /usage --output-format text --no-session-persistence
@@ -12,6 +12,8 @@
 #     and widget-error.log (error messages only - never the /usage output itself).
 # Plain Windows PowerShell 5.1 + WPF. No dependencies. Keep this file ASCII-only.
 # ---------------------------------------------------------------------------
+
+$Version = '1.1.0'   # keep in sync with VERSION, setup.ps1 and CHANGELOG.md
 
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms, System.Drawing
 
@@ -320,6 +322,9 @@ function Add-MenuItem([string]$header, [scriptblock]$action) {
     $i = New-Object System.Windows.Controls.MenuItem
     $i.Header = $header; $i.add_Click($action); [void]$menu.Items.Add($i); return $i
 }
+$verItem = Add-MenuItem "Claude Usage Widget v$Version" {}
+$verItem.IsEnabled = $false
+[void]$menu.Items.Add((New-Object System.Windows.Controls.Separator))
 [void](Add-MenuItem 'Refresh now' { $State.nextRun = Get-Date })
 $topItem = Add-MenuItem 'Always on top' { $win.Topmost = -not $win.Topmost; $topItem.IsChecked = $win.Topmost; $S.topmost = $win.Topmost; Save-Settings }
 $topItem.IsChecked = $win.Topmost
@@ -333,7 +338,7 @@ $win.ContextMenu = $menu
 $tray = New-Object System.Windows.Forms.NotifyIcon
 try { $tray.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($ClaudePath) } catch { $tray.Icon = [System.Drawing.SystemIcons]::Information }
 if (-not $tray.Icon) { $tray.Icon = [System.Drawing.SystemIcons]::Information }
-$tray.Text = 'Claude usage: loading...'
+$tray.Text = "Claude Usage Widget v$Version"
 $tray.add_MouseClick({ param($sender, $e) if ($e.Button -eq [System.Windows.Forms.MouseButtons]::Left) { Toggle-Window } })
 $cms = New-Object System.Windows.Forms.ContextMenuStrip
 [void]$cms.Items.Add('Show / hide', $null, { Toggle-Window })

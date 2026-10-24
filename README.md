@@ -1,5 +1,7 @@
 # claude-usage-widget
 
+**Version 1.1.0** · see [CHANGELOG.md](CHANGELOG.md)
+
 A tiny, read-only Windows widget that shows your Claude Code plan usage: the current
 5-hour session and the weekly limit, each with time left until reset.
 
@@ -60,7 +62,8 @@ You should see lines starting with `Current session:` and `Current week (all mod
 
 Setup installs to `%LOCALAPPDATA%\ClaudeUsageWidget`, adds a Start Menu shortcut and
 (optionally) starts the widget with Windows. No admin rights needed. Run `Install.cmd`
-again to update or uninstall.
+again to update or uninstall; it shows which version is installed. The version is also shown
+in the widget's right-click menu.
 
 If Claude Code is missing, setup offers to open Anthropic's
 [official installer](https://code.claude.com/docs/en/setup) in a PowerShell window, and
