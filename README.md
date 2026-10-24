@@ -43,8 +43,20 @@ You should see lines starting with `Current session:` and `Current week (all mod
 
 1. Download this repo as a ZIP (**Code → Download ZIP**) and unzip it anywhere.
 2. Double-click **`Install.cmd`**. If Windows asks whether to run it, click **Run** / **More info → Run anyway**.
-3. The setup window checks that Claude Code is installed and signed in, shows your
-   current usage, and installs the widget with one click.
+3. The setup window runs a checklist, then installs the widget with one click:
+
+   | Check | Why it matters |
+   | --- | --- |
+   | Windows 10 or 11 | Built for Windows only |
+   | Windows PowerShell 5.1 | Runs the widget (built into Windows) |
+   | .NET Framework / WPF | Draws the window (built into Windows) |
+   | VBScript | Starts the widget without a console window; falls back to PowerShell if missing |
+   | PowerShell scripts allowed | Company group policy can block scripts |
+   | Claude Code installed | The desktop app does **not** include the `claude` command |
+   | Claude Code on PATH | The installer doesn't always add `%USERPROFILE%\.local\bin` |
+   | Signed in and `/usage` readable | Confirms the widget will get real numbers |
+
+   No Python, Node.js, Git or admin rights needed.
 
 Setup installs to `%LOCALAPPDATA%\ClaudeUsageWidget`, adds a Start Menu shortcut and
 (optionally) starts the widget with Windows. No admin rights needed. Run `Install.cmd`
@@ -74,8 +86,10 @@ to add `%USERPROFILE%\.local\bin` to your PATH if needed. It only does these whe
   Run the command above and compare.
 - **Nothing starts**: your PC may block PowerShell scripts by policy. Check with
   `Get-ExecutionPolicy -List`.
-- **`claude` not recognized**: add `%USERPROFILE%\.local\bin` to your user PATH and
-  open a new terminal.
+- **`claude` not recognized**: add `%USERPROFILE%\.local\bin` to your user PATH (setup has
+  a button for this), then open a **new** terminal. Windows already open keep the old PATH.
+- **Don't test `/usage` from Git Bash**: it rewrites `/usage` into a file path and the prompt
+  goes to the model. Use PowerShell or CMD.
 
 ## Credits
 
