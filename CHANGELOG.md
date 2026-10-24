@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.1 - 2026-10-24
+- README: plan compatibility table (tested on Pro and Enterprise).
+
 ## v1.1.0 - 2026-10-24
 - Setup window: 8-point requirements checklist (Windows, PowerShell 5.1, .NET/WPF,
   VBScript, script policy, Claude Code installed, PATH, signed in and `/usage` readable).

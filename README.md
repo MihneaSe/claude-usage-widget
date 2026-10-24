@@ -1,6 +1,6 @@
 # claude-usage-widget
 
-**Version 1.1.0** · see [CHANGELOG.md](CHANGELOG.md)
+**Version 1.1.1** · see [CHANGELOG.md](CHANGELOG.md)
 
 A tiny, read-only Windows widget that shows your Claude Code plan usage: the current
 5-hour session and the weekly limit, each with time left until reset.
@@ -31,7 +31,15 @@ every 2 minutes. `/usage` is a slash command, so no model is called. Beyond that
 
 - Windows 10 or 11 (Windows PowerShell 5.1 and WPF are built in)
 - [Claude Code](https://code.claude.com/docs/en/setup) installed, signed in, and `claude` on your PATH
-- A Pro, Max, Team or Enterprise plan (tested on Max and Team)
+- A Claude plan that includes Claude Code and has usage limits:
+
+  | Plan | Status |
+  | --- | --- |
+  | Pro | Tested, works |
+  | Enterprise | Tested, works |
+  | Max, Team | Should work (same `/usage` limits), not yet tested |
+  | API key / Console | Not supported: no plan limits to show |
+  | Free | Not supported: doesn't include Claude Code |
 
 Check it works first, in PowerShell (not Git Bash):
 
