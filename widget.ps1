@@ -13,7 +13,7 @@
 # Plain Windows PowerShell 5.1 + WPF. No dependencies. Keep this file ASCII-only.
 # ---------------------------------------------------------------------------
 
-$Version = '1.1.1'   # keep in sync with VERSION, setup.ps1 and CHANGELOG.md
+$Version = '1.2.0'   # keep in sync with VERSION, setup.ps1 and CHANGELOG.md
 
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms, System.Drawing
 

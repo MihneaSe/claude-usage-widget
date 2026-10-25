@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.0 - 2026-10-25
+- macOS version (`mac/`): native floating widget plus menu bar %, same cream theme,
+  colour steps, countdowns and fade on mouse-over. `Install.command` runs a requirements
+  checklist, builds the app on your Mac and can start it at login. Not yet tested on a Mac.
+
 ## v1.1.1 - 2026-10-24
 - README: plan compatibility table (tested on Pro and Enterprise).
 

@@ -1,8 +1,8 @@
 # claude-usage-widget
 
-**Version 1.1.1** · see [CHANGELOG.md](CHANGELOG.md)
+**Version 1.2.0** · see [CHANGELOG.md](CHANGELOG.md)
 
-A tiny, read-only Windows widget that shows your Claude Code plan usage: the current
+A tiny, read-only Windows and macOS widget that shows your Claude Code plan usage: the current
 5-hour session and the weekly limit, each with time left until reset.
 
 - The % number changes colour every 20% (ink, sage, amber, clay, red).
@@ -84,6 +84,26 @@ to add `%USERPROFILE%\.local\bin` to your PATH if needed. It only does these whe
 2. Double-click `start-widget.vbs`.
 3. To start with Windows: Win+R → `shell:startup` → put a shortcut to `start-widget.vbs` there.
 </details>
+
+## macOS
+
+The `mac/` folder has a native version: the same floating card, plus your session % in the
+menu bar. It's built from source on your Mac during install, so there's nothing pre-compiled
+to trust. **New in v1.2.0 and not yet tested on a Mac** — feedback welcome.
+
+**Requirements:** macOS 11 or later, Xcode Command Line Tools (free; setup offers to install
+them), Claude Code installed and signed in. No Homebrew, Python or admin rights.
+
+**Install:**
+
+1. Download this repo as a ZIP and unzip it.
+2. Open Terminal, type `bash ` (with a space), drag `mac/Install.command` into the window,
+   press Enter. (Double-clicking also works, but macOS may block files downloaded from the
+   internet; then use System Settings → Privacy & Security → Open Anyway.)
+3. Setup runs a checklist, builds the app into `~/Applications`, and asks whether to start
+   it at login.
+
+To remove it, run `mac/Uninstall.command` the same way.
 
 ## Use
 
