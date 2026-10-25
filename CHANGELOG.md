@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.1 - 2026-10-25
+- macOS setup: if Claude Code is missing, shows the install steps and offers to run
+  Anthropic's official installer, then walks you through signing in.
+- macOS setup: offers to add Claude Code to your Terminal PATH; signs you in if needed.
+- README: step-by-step Claude Code install for Mac and Windows.
+
 ## v1.2.0 - 2026-10-25
 - macOS version (`mac/`): native floating widget plus menu bar %, same cream theme,
   colour steps, countdowns and fade on mouse-over. `Install.command` runs a requirements

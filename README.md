@@ -1,6 +1,6 @@
 # claude-usage-widget
 
-**Version 1.2.0** · see [CHANGELOG.md](CHANGELOG.md)
+**Version 1.2.1** · see [CHANGELOG.md](CHANGELOG.md)
 
 A tiny, read-only Windows and macOS widget that shows your Claude Code plan usage: the current
 5-hour session and the weekly limit, each with time left until reset.
@@ -49,6 +49,20 @@ claude -p /usage --output-format text --no-session-persistence
 
 You should see lines starting with `Current session:` and `Current week (all models):`.
 
+## Don't have Claude Code yet?
+
+The Claude desktop app doesn't include the `claude` command; install Claude Code separately
+(Pro, Max, Team or Enterprise plan). Both setups offer to do this for you, or by hand:
+
+| | Mac (Terminal) | Windows (PowerShell) |
+| --- | --- | --- |
+| 1. Install | `curl -fsSL https://claude.ai/install.sh \| bash` | `irm https://claude.ai/install.ps1 \| iex` |
+| 2. Sign in | run `claude`, log in in the browser, type `/exit` | same |
+| 3. Check | `claude --version` | same (in a **new** PowerShell window) |
+
+If `claude` isn't found afterwards, add `~/.local/bin` (Mac) or `%USERPROFILE%\.local\bin`
+(Windows) to your PATH. Source: [Claude Code setup docs](https://code.claude.com/docs/en/setup).
+
 ## Install
 
 1. Download this repo as a ZIP (**Code → Download ZIP**) and unzip it anywhere.
@@ -96,9 +110,11 @@ them), Claude Code installed and signed in. No Homebrew, Python or admin rights.
 
 **Install:**
 
-1. Download this repo as a ZIP and unzip it.
-2. Open Terminal, type `bash ` (with a space), drag `mac/Install.command` into the window,
-   press Enter. (Double-clicking also works, but macOS may block files downloaded from the
+1. Download the ZIP: <https://github.com/MihneaSe/claude-usage-widget/archive/refs/heads/main.zip>
+   (Safari usually unzips it into Downloads as `claude-usage-widget-main`).
+2. Open Terminal (Cmd+Space, type Terminal) and run:
+   `bash ~/Downloads/claude-usage-widget-main/mac/Install.command`
+   (or type `bash `, drag `mac/Install.command` into the window, press Enter). (Double-clicking also works, but macOS may block files downloaded from the
    internet; then use System Settings → Privacy & Security → Open Anyway.)
 3. Setup runs a checklist, builds the app into `~/Applications`, and asks whether to start
    it at login.

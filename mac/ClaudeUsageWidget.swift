@@ -14,7 +14,7 @@
 
 import AppKit
 
-let appVersion = "1.2.0"   // keep in sync with VERSION, widget.ps1, setup.ps1 and CHANGELOG.md
+let appVersion = "1.2.1"   // keep in sync with VERSION, widget.ps1, setup.ps1 and CHANGELOG.md
 let probeInterval: TimeInterval = 120
 let probeTimeout: TimeInterval = 45
 

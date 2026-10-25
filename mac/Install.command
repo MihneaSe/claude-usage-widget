@@ -43,23 +43,61 @@ else
 fi
 
 # 3. Claude Code installed
-CLAUDE=""
-for c in "$HOME/.local/bin/claude" /opt/homebrew/bin/claude /usr/local/bin/claude; do
-    if [ -x "$c" ]; then CLAUDE="$c"; break; fi
-done
-if [ -z "$CLAUDE" ]; then CLAUDE="$(/bin/zsh -lc 'command -v claude' 2>/dev/null)"; fi
+find_claude() {
+    CLAUDE=""
+    for c in "$HOME/.local/bin/claude" /opt/homebrew/bin/claude /usr/local/bin/claude; do
+        if [ -x "$c" ]; then CLAUDE="$c"; return; fi
+    done
+    CLAUDE="$(/bin/zsh -lc 'command -v claude' 2>/dev/null)"
+}
+sign_in() {
+    echo
+    echo "     Sign in to Claude Code:"
+    echo "       1. Claude Code opens below and asks you to log in."
+    echo "       2. Pick your Claude account and finish the login in your browser."
+    echo "       3. Back here, type  /exit  and press Enter to continue setup."
+    echo
+    read -r -n 1 -p "     Press any key to open Claude Code..." _ </dev/tty; echo
+    "$CLAUDE" </dev/tty
+    echo
+}
+find_claude
 if [ -n "$CLAUDE" ] && [ -x "$CLAUDE" ]; then
     ok "Claude Code installed: $("$CLAUDE" --version 2>/dev/null | head -n 1)"
 else
     fail "Claude Code is not installed. The Claude desktop app doesn't include it."
-    echo "     Install it in Terminal:  curl -fsSL https://claude.ai/install.sh | bash"
-    echo "     Then run:  claude   (sign in, then type /exit) and double-click Install.command again."
-    finish 1
+    echo "     How to install it (Anthropic's official installer, no admin rights):"
+    echo "       1. In Terminal run:  curl -fsSL https://claude.ai/install.sh | bash"
+    echo "       2. Then run:  claude   - sign in with your Claude account, then type /exit"
+    echo "       3. Run this setup again."
+    echo "     Needs a Pro, Max, Team or Enterprise plan (the free plan doesn't include Claude Code)."
+    answer="$(osascript -e 'button returned of (display dialog "Claude Code is not installed. Install it now with Anthropic'"'"'s official installer?" buttons {"Not now", "Install"} default button "Install" with title "Claude Usage Widget")' 2>/dev/null)"
+    if [ "$answer" != "Install" ]; then finish 1; fi
+    echo
+    echo "     Installing Claude Code..."
+    curl -fsSL https://claude.ai/install.sh | bash
+    find_claude
+    if [ -z "$CLAUDE" ] || [ ! -x "$CLAUDE" ]; then
+        fail "Claude Code install didn't finish. Run step 1 above by hand, then this setup again."
+        finish 1
+    fi
+    ok "Claude Code installed: $("$CLAUDE" --version 2>/dev/null | head -n 1)"
+    sign_in
 fi
 
 # 4. Claude Code on your PATH (only matters for using it in Terminal; the widget finds it anyway)
-if /bin/zsh -lc 'command -v claude' >/dev/null 2>&1; then ok "Claude Code on your PATH"
-else warn "Claude Code isn't on your Terminal PATH. The widget still works. To fix: add ~/.local/bin to PATH in ~/.zshrc"; fi
+if /bin/zsh -lc 'command -v claude' >/dev/null 2>&1; then
+    ok "Claude Code on your PATH"
+else
+    dir="$(dirname "$CLAUDE")"
+    answer="$(osascript -e 'button returned of (display dialog "Claude Code isn'"'"'t on your Terminal PATH, so typing claude in Terminal won'"'"'t work. Add it to ~/.zshrc? (The widget works either way.)" buttons {"Skip", "Add"} default button "Add" with title "Claude Usage Widget")' 2>/dev/null)"
+    if [ "$answer" = "Add" ]; then
+        printf '\n# Added by Claude Usage Widget setup\nexport PATH="%s:$PATH"\n' "$dir" >> "$HOME/.zshrc"
+        ok "Added $dir to your PATH (in ~/.zshrc; open a new Terminal window to use it)"
+    else
+        warn "Claude Code isn't on your Terminal PATH. The widget still works."
+    fi
+fi
 
 # 5. Signed in and /usage readable (with a 45 s time limit)
 printf '  %s…%s Asking Claude Code for your usage (a few seconds)\r' "$dim" "$off"
@@ -70,8 +108,13 @@ w="$(printf '%s' "$out" | grep -o 'Current week (all models): [0-9]*%' | grep -o
 if [ -n "$s$w" ]; then
     ok "Signed in, /usage works: session ${s:---}, week ${w:---}"
 elif printf '%s' "$out" | grep -qiE 'log ?in|not authenticated|auth'; then
-    fail "Not signed in. Run: claude   (sign in, then /exit) and double-click Install.command again."
-    finish 1
+    fail "Claude Code is installed but not signed in."
+    sign_in
+    out="$(perl -e 'alarm 45; exec @ARGV' "$CLAUDE" -p /usage --output-format text --no-session-persistence 2>&1 </dev/null)"
+    s="$(printf '%s' "$out" | grep -o 'Current session: [0-9]*%' | grep -o '[0-9]*%' | head -n 1)"
+    w="$(printf '%s' "$out" | grep -o 'Current week (all models): [0-9]*%' | grep -o '[0-9]*%' | head -n 1)"
+    if [ -n "$s$w" ]; then ok "Signed in, /usage works: session ${s:---}, week ${w:---}"
+    else fail "Still not signed in. Run  claude , sign in, type /exit, then run this setup again."; finish 1; fi
 else
     warn "Unexpected answer from /usage (plan without limits, or a new format). The widget may show \"unexpected output\"."
 fi
