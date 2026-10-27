@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.2 - 2026-10-27
+- macOS: fix "unexpected output" candidates when started from Finder: run claude from your
+  home folder with a Terminal-like environment, and keep its error messages.
+- macOS: when usage can't be read, saves what Claude Code returned to
+  ~/Library/Logs/Claude Usage Widget/last-output.txt; open it from the menu
+  ("Show last error output").
+
 ## v1.2.1 - 2026-10-25
 - macOS setup: if Claude Code is missing, shows the install steps and offers to run
   Anthropic's official installer, then walks you through signing in.

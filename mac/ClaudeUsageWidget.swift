@@ -14,7 +14,7 @@
 
 import AppKit
 
-let appVersion = "1.2.1"   // keep in sync with VERSION, widget.ps1, setup.ps1 and CHANGELOG.md
+let appVersion = "1.2.2"   // keep in sync with VERSION, widget.ps1, setup.ps1 and CHANGELOG.md
 let probeInterval: TimeInterval = 120
 let probeTimeout: TimeInterval = 45
 
@@ -183,12 +183,18 @@ enum Claude {
             let p = Process()
             p.executableURL = URL(fileURLWithPath: path)
             p.arguments = ["-p", "/usage", "--output-format", "text", "--no-session-persistence"]
+            // Apps started from Finder get a bare environment and "/" as working folder;
+            // give claude the same basics it has in Terminal.
             var env = ProcessInfo.processInfo.environment
             env["PATH"] = "\(homeDir)/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:" + (env["PATH"] ?? "")
+            env["HOME"] = env["HOME"] ?? homeDir
+            if env["LANG"] == nil { env["LANG"] = "en_US.UTF-8" }
+            env["NO_COLOR"] = "1"
             p.environment = env
+            p.currentDirectoryURL = URL(fileURLWithPath: homeDir)
             let out = Pipe()
             p.standardOutput = out
-            p.standardError = FileHandle.nullDevice
+            p.standardError = out   // keep error messages too, so we can show what went wrong
             p.standardInput = FileHandle.nullDevice
             do { try p.run() } catch {
                 DispatchQueue.main.async { completion(nil) }
@@ -199,9 +205,27 @@ enum Claude {
             let data = out.fileHandleForReading.readDataToEndOfFile()
             p.waitUntilExit()
             killer.cancel()
-            let text = p.terminationReason == .exit ? String(data: data, encoding: .utf8) : nil
-            DispatchQueue.main.async { completion(text) }
+            var text = String(data: data, encoding: .utf8)
+            if p.terminationReason != .exit { text = (text ?? "") + "\n[timed out after \(Int(probeTimeout)) s]" }
+            let result = text
+            DispatchQueue.main.async { completion(result) }
         }
+    }
+}
+
+// MARK: - Diagnostics (only written when /usage can't be read; stays on this Mac)
+
+enum Diagnostics {
+    static var file: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Logs/Claude Usage Widget/last-output.txt")
+    }
+    static func save(_ text: String, claudePath: String?) {
+        let dir = file.deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let header = "Claude Usage Widget v\(appVersion) - \(Date())\nclaude: \(claudePath ?? "not found")\n" +
+                     "command: claude -p /usage --output-format text --no-session-persistence\n---\n"
+        try? (header + text).write(to: file, atomically: true, encoding: .utf8)
     }
 }
 
@@ -423,6 +447,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         m.addItem(ver)
         m.addItem(.separator())
         m.addItem(item("Refresh now", #selector(refreshNow)))
+        m.addItem(item("Show last error output", #selector(showLastOutput)))
         m.addItem(item("Show / hide widget", #selector(toggleWidget)))
         let top = item("Always on top", #selector(toggleTopmost))
         top.tag = 1
@@ -443,6 +468,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func refreshNow() { nextProbe = Date() }
+    @objc func showLastOutput() {
+        if FileManager.default.fileExists(atPath: Diagnostics.file.path) {
+            NSWorkspace.shared.open(Diagnostics.file)
+        } else {
+            let a = NSAlert()
+            a.messageText = "No errors so far"
+            a.informativeText = "The widget saves what Claude Code returned only when it can't read your usage."
+            a.runModal()
+        }
+    }
     @objc func toggleWidget() {
         if panel.isVisible { panel.orderOut(nil) } else { panel.alphaValue = 1; panel.orderFrontRegardless() }
     }
@@ -471,8 +506,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func probeDone(_ text: String?) {
         probing = false
         nextProbe = Date().addingTimeInterval(probeInterval)
-        guard let text = text else {
-            lastError = "claude did not answer"
+        guard let text = text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            lastError = "claude gave no answer"
+            Diagnostics.save(text ?? "(nothing)", claudePath: claudePath)
             return
         }
         if let u = UsageParser.parse(text) {
@@ -481,8 +517,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             lastError = ""
         } else if text.range(of: "log ?in|not authenticated|auth", options: [.regularExpression, .caseInsensitive]) != nil {
             lastError = "not signed in"
+            Diagnostics.save(text, claudePath: claudePath)
         } else {
             lastError = "unexpected output"
+            Diagnostics.save(text, claudePath: claudePath)
         }
         render()
     }
@@ -501,7 +539,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         var text = ""
         var color = Palette.muted
         if lastOk == nil {
-            text = lastError.isEmpty ? "loading..." : lastError
+            text = lastError.isEmpty ? "loading..." : lastError + " (see menu)"
             if !lastError.isEmpty { color = Palette.red }
         } else if let ok = lastOk, Date().timeIntervalSince(ok) > 3 * probeInterval {
             let f = DateFormatter()

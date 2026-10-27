@@ -1,6 +1,6 @@
 # claude-usage-widget
 
-**Version 1.2.1** · see [CHANGELOG.md](CHANGELOG.md)
+**Version 1.2.2** · see [CHANGELOG.md](CHANGELOG.md)
 
 A tiny, read-only Windows and macOS widget that shows your Claude Code plan usage: the current
 5-hour session and the weekly limit, each with time left until reset.
